@@ -1,0 +1,77 @@
+- name: Run apt-get update if the last one is more then 1 day ago
+  apt: update_cache=yes cache_valid_time=86400
+  when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+
+- name: Install vim,htop,curl,traceroute,dnsutils,ncdu,git,unp,p7zip,screen,tmux,sudo
+  package:
+    name:
+      - vim
+      - htop
+      - curl
+      - traceroute
+      - dnsutils #dig,nslookup,nsupdate
+      - ncdu
+      - git
+      - unp
+      - screen
+      - tmux
+      - sudo
+      - unzip
+      - moreutils # vipe (insert editor in pipe), chronic (run command quietly unless it fails)
+
+- name: Install debian/ubuntu-specific packages
+  package:
+    name:
+      - mtr-tiny # better traceroute + ping
+      - p7zip-full # used for unp of 7z files
+  when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+
+- name: Install fedora-specific packages
+  package:
+    name:
+      - mtr # better traceroute + ping
+      - p7zip #used for unp of 7z files
+  when: ansible_distribution == 'Fedora'
+
+# Named 'ZZ-..' so it runs last, because otherwise vte.sh fucks up PROMPT_COMMAND
+- name: Install profile customization script
+  copy:
+    src: ZZ-shell-customization.sh
+    dest: /etc/profile.d/
+
+- name: Add hcmnt binary
+  copy: src=hcmnt dest=/usr/local/bin/hcmnt owner=root group=root mode=755
+
+- name: Add wgetrc
+  copy: src=wgetrc dest=/etc/wgetrc owner=root group=root mode=755
+
+- name: Generate en_US.UTF-8 locale (default)
+  locale_gen: name=en_US.UTF-8 state=present
+  failed_when: False
+  tags: locale
+
+- name: Generate de_DE.UTF-8 locale (default)
+  locale_gen: name=de_DE.UTF-8 state=present
+  failed_when: False
+  tags: locale
+
+# Generate locales manually if locale_gen didn't work due to this bug:
+# https://github.com/ansible/ansible-modules-extras/issues/425
+- name: Generate en_US.UTF-8 locale (alternative)
+  shell: locale -a |grep en_US.utf8 || locale-gen en_US.UTF-8
+  register: common_generate_en_us_locale_result
+  changed_when: >
+    "Generating" in common_generate_en_us_locale_result.stdout
+  failed_when: >
+    not common_generate_en_us_locale_result.stdout | lower is regex("en_us.utf-?8")
+  tags: locale
+
+- name: Generate de_DE.UTF-8 locale (alternative)
+  shell: locale -a |grep de_DE.utf8 || locale-gen de_DE.UTF-8
+  register: common_generate_de_de_locale_result
+  changed_when: >
+     "Generating" in common_generate_de_de_locale_result.stdout
+  failed_when: >
+    not common_generate_de_de_locale_result.stdout | lower is regex("de_de.utf-?8")
+  tags: locale
+
