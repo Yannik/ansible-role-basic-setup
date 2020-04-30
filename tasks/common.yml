@@ -18,6 +18,7 @@
       - sudo
       - unzip
       - moreutils # vipe (insert editor in pipe), chronic (run command quietly unless it fails)
+      - jq
 
 - name: Install debian/ubuntu-specific packages
   package:
