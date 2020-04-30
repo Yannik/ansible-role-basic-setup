@@ -3,7 +3,7 @@
 # Not an interactive shell?
 [[ $- == *i* ]] || return 0
 
-EDITOR=vim
+export EDITOR=vim
 
 source /usr/local/bin/hcmnt
 hcmntextra='date "+%d.%m.%Y %H:%M:%S"'
