@@ -34,17 +34,85 @@
       - p7zip #used for unp of 7z files
   when: ansible_distribution == 'Fedora'
 
-# Named 'ZZ-..' so it runs last, because otherwise vte.sh fucks up PROMPT_COMMAND
-- name: Install profile customization script
+- name: Remove /etc/profile.d/ customization script
+  file:
+    path: /etc/profile.d/ZZ-shell-customization.sh
+    state: absent
+
+- name: Bash customization (debian/ubuntu)
+  lineinfile:
+    dest: "{{ item }}"
+    line: ". /etc/sh-customization.common"
+  with_items:
+    - /etc/bashrc
+    - /etc/bash.bashrc
+    - /etc/zshrc
+  register: result
+  failed_when: result.failed and not result.msg is match("Destination .* does not exist")
+
+- name: Install /etc/sh-customization.common
   copy:
-    src: ZZ-shell-customization.sh
-    dest: /etc/profile.d/
+    src: "{{ item }}"
+    dest: /etc/
+  with_items:
+    - sh-customization.common
+    - sh-customization.bash
+    - sh-customization.zsh
 
 - name: Add hcmnt binary
   copy: src=hcmnt dest=/usr/local/bin/hcmnt owner=root group=root mode=755
 
 - name: Add wgetrc
   copy: src=wgetrc dest=/etc/wgetrc owner=root group=root mode=755
+
+- name: Find all .bashrc files
+  shell: 'find /root/ -maxdepth 1 -name .bashrc; find /home -maxdepth 2 -name .bashrc'
+  register: bashrc_files
+  changed_when: False
+  when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+
+- name: Find unchanged .bashrc files
+  shell: "cmp --quiet {{ item }} /etc/skel/.bashrc && echo {}"
+  with_items: "{{ bashrc_files.stdout_lines }}"
+  failed_when: False
+  changed_when: False
+  register: bashrc_files_change_test
+  when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+
+- debug:
+    msg: "{{ item.item }} has been changed, ignoring!"
+  with_items: "{{ bashrc_files_change_test.results | rejectattr('rc', 'equalto', 0) | list }}"
+  loop_control:
+    label: "{{ item.item }}"
+
+- name: Copy bashrc-skel
+  copy:
+    src: debian-skel-bashrc
+    dest: "{{ item.item }}"
+  with_items: "{{ bashrc_files_change_test.results | selectattr('rc', 'equalto', 0) | list }}"
+  loop_control:
+    label: "{{ item.item }}"
+  when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+
+- name: Copy debian-skel-bashrc to /etc/skel
+  copy:
+    src: debian-skel-bashrc
+    dest: /etc/skel/.bashrc
+  when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+
+- name: Check if /usr/share/base-files/dot.bashrc and /root/.bashrc are the same
+  command: cmp --silent /usr/share/base-files/dot.bashrc /root/.bashrc
+  register: root_bashrc_result
+  changed_when: False
+  failed_when: root_bashrc_result.rc > 1
+  when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+
+- name: Copy /etc/skel/.bashrc to /etc/
+  copy:
+    src: debian-skel-bashrc
+    dest: /root/.bashrc
+  when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu' and
+        root_bashrc_result is defined and root_bashrc_result.rc == 0
 
 - name: Generate en_US.UTF-8 locale (default)
   locale_gen: name=en_US.UTF-8 state=present

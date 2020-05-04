@@ -1,0 +1,42 @@
+# This file is getting sourced, therefore no hashbang
+
+# Not an interactive shell?
+[[ $- == *i* ]] || return 0
+
+SCRIPT=$0
+test -n "$BASH" && SCRIPT=$BASH_SOURCE
+DIR=$(dirname $(readlink -f "$SCRIPT"))
+
+# make less more friendly for non-text input files, see lesspipe(1)
+[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
+
+export EDITOR=vim
+
+source /usr/local/bin/hcmnt
+hcmntextra='date "+%d.%m.%Y %H:%M:%S"'
+
+hcmnt_cmd() {
+    hcmnt -eityl ~/.hcmnt.log $LOGNAME@$HOSTNAME
+}
+
+alias ...='../..'
+alias ....='../../..'
+alias .....='../../../..'
+alias ......='../../../../..'
+
+# ls output is very rarely piped to a file or used in an automated fashion, therefore
+# it's kind of safe to use color=always
+alias ls='ls --color=always'
+alias l='ls -lah' #long list,show all, human readable sizes
+alias ll='ls -lh' #long list, human readable sizes
+alias la='ls -A' #show almost all
+alias lt='ls -lht' #long list,sorted by date,show type,human readable sizes
+
+alias grep='grep --color=auto --exclude-dir={.bzr,CVS,.git,.hg,.svn,.idea,.tox}'
+
+# colored GCC warnings and errors
+export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
+
+[ -n "$BASH_VERSION"  ] && source "$DIR/sh-customization.bash"
+[ -n "$ZSH_VERSION" ] && source "$DIR/sh-customization.zsh"
+

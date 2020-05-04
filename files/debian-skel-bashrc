@@ -1,0 +1,11 @@
+# ~/.bashrc: executed by bash(1) for non-login shells.
+
+# If not running interactively, don't do anything
+[[ $- == *i* ]] || return 0
+
+# User specific environment
+if ! [[ "$PATH" =~ "$HOME/.local/bin" ]]; then
+    export PATH="$HOME/.local/bin:$PATH"
+fi
+
+# User specific aliases and functions
