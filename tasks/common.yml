@@ -66,6 +66,22 @@
 - name: Add wgetrc
   copy: src=wgetrc dest=/etc/wgetrc owner=root group=root mode=755
 
+- name: Add vimrc (ubuntu/debian)
+  copy: src=vimrc dest=/etc/vim/vimrc.local owner=root group=root mode=755
+  when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+
+- name: Add vimrc (fedora)
+  copy: src=vimrc dest=/etc/vimrc.local owner=root group=root mode=755
+  when: ansible_distribution == 'Fedora'
+
+- name: Create vi->vim link (fedora)
+  file:
+    src: /usr/bin/vim
+    dest: /usr/bin/vi
+    state: link
+    force: yes
+  when: ansible_distribution == 'Fedora'
+
 - name: Find all .bashrc files
   shell: 'find /root/ -maxdepth 1 -name .bashrc; find /home -maxdepth 2 -name .bashrc'
   register: bashrc_files
