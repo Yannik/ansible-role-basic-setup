@@ -20,6 +20,7 @@
       - moreutils # vipe (insert editor in pipe), chronic (run command quietly unless it fails)
       - jq
       - psmisc
+      - kexec-tools
 
 - name: Install debian/ubuntu-specific packages
   package:
