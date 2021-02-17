@@ -2,7 +2,7 @@
   apt: update_cache=yes cache_valid_time=86400
   when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
 
-- name: Install vim,htop,curl,traceroute,dnsutils,ncdu,git,unp,p7zip,screen,tmux,sudo
+- name: Install vim,htop,curl,traceroute,dnsutils,ncdu,git,p7zip,screen,tmux,sudo
   package:
     name:
       - vim
@@ -12,7 +12,6 @@
       - dnsutils #dig,nslookup,nsupdate
       - ncdu
       - git
-      - unp
       - screen
       - tmux
       - sudo
@@ -25,6 +24,7 @@
 - name: Install debian/ubuntu-specific packages
   package:
     name:
+      - unp
       - mtr-tiny # better traceroute + ping
       - p7zip-full # used for unp of 7z files
   when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
@@ -102,6 +102,7 @@
   with_items: "{{ bashrc_files_change_test.results | rejectattr('rc', 'equalto', 0) | list }}"
   loop_control:
     label: "{{ item.item }}"
+  when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
 
 - name: Copy bashrc-skel
   copy:

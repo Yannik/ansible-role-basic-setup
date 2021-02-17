@@ -3,7 +3,7 @@
 galaxy_info:
   role_name: basic-setup
   author: Yannik Sembritzki
-  #company: 
+  #company:
   description: Basic linux setup
   license: MIT
   min_ansible_version: 2.4.0
@@ -17,7 +17,7 @@ galaxy_info:
     - name: Debian
       versions:
         - stretch
-        - buster  
+        - buster
   galaxy_tags:
     - system
 dependencies: []
