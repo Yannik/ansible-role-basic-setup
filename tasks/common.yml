@@ -21,6 +21,11 @@
       - psmisc
       - kexec-tools
 
+- name: Install additional tools
+  package:
+    name: "{{ basic_setup_additional_tools }}"
+  when: basic_setup_additional_tools is defined
+
 - name: Install debian/ubuntu-specific packages
   package:
     name:
